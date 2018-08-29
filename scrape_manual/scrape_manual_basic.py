@@ -1,17 +1,8 @@
 import urllib.request
-import os
-#from bs4 import BeautifulSoup
-#from urllib3 import urlopen
-#import urllib
-
 from bs4 import BeautifulSoup
 import urllib3
+import os
 
-http = urllib3.PoolManager()
-
-url = 'http://www.thefamouspeople.com/singers.php'
-response = http.request('GET', url)
-soup = BeautifulSoup(response.data)
 
 def make_soup(url):
     http = urllib3.PoolManager()
