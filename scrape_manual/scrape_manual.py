@@ -45,11 +45,22 @@ if __name__=='__main__':
     savepath = cwd + '/images/'
     #url = 'https://www.airbnb.com/rooms/5185375?location=Denver%2C%20CO%2C%20United%20States&adults=2&guests=1&s=aWMV5CJc'
     #url = 'https://www.airbnb.com/rooms/521072?location=Denver%2C%20CO%2C%20United%20States&s=u6RjtbVm'
-    url = 'https://www.airbnb.com/rooms/13172589?location=Denver%2C%20CO%2C%20United%20States&s=u6RjtbVm'
+    #url = 'https://www.airbnb.com/rooms/13172589?location=Denver%2C%20CO%2C%20United%20States&s=u6RjtbVm'
 
-    # extract image links
-    links = extract_image_urls(url)
+    urls = ['https://www.airbnb.com/rooms/13449331?location=Denver%2C%20CO%2C%20United%20States&s=Dsga8HCj',
+    'https://www.airbnb.com/rooms/6488535?location=Denver%2C%20CO%2C%20United%20States&s=Dsga8HCj',
+    'https://www.airbnb.com/rooms/4753876?location=Denver%2C%20CO%2C%20United%20States&s=Dsga8HCj',
+    'https://www.airbnb.com/rooms/16005520?location=Denver%2C%20CO%2C%20United%20States&s=Dsga8HCj',
+    'https://www.airbnb.com/rooms/13172589?location=Denver%2C%20CO%2C%20United%20States&s=u6RjtbVm',
+    'https://www.airbnb.com/rooms/521072?location=Denver%2C%20CO%2C%20United%20States&s=u6RjtbVm',
+    'https://www.airbnb.com/rooms/5185375?location=Denver%2C%20CO%2C%20United%20States&adults=2&guests=1&s=aWMV5CJc']
 
-    # save images with sequential names
-    fid = '00003' # loop this for multiple calls
-    save_images_sequential(links, fid, savepath)
+    fid_num = 0
+    for url in urls:
+        fid = 'listing_{}'.format(fid_num)
+        # extract image links
+        links = extract_image_urls(url)
+
+        # save images with sequential names
+        save_images_sequential(links, fid, savepath)
+        fid_num += 1
