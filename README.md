@@ -3,8 +3,11 @@ tools for scraping images
 
 ### resources
 
-image scraping tutorial:
+image scraping tutorials:
+
 https://www.pyimagesearch.com/2015/10/12/scraping-images-with-python-and-scrapy/
+
+https://realpython.com/web-scraping-with-scrapy-and-mongodb/
 
 scrape tools for airbnb:
 
@@ -20,6 +23,8 @@ scrape tools for airbnb:
 
  ### using scrapy
 
+ tutorial: https://realpython.com/web-scraping-with-scrapy-and-mongodb/
+
  ~~~
  scrapy crawl spider -o results.json
  ~~~
@@ -34,3 +39,16 @@ text = r.text
 with open('out2.txt','w') as f:
     f.write(text)
  ~~~
+
+### scraping basics
+
+1. check source code to see if what you want is in the page's source. Two options:
+    - mac, chrome: alt+cmd+u, or view-> developer-> view source
+    - save to file: requests.get().text
+
+2. scraping w/ javascript engine
+    - selenium:
+        - install chromedriver (brew), export to PATH
+            https://stackoverflow.com/questions/38081021/using-selenium-on-mac-chrome
+
+        - tutorial: https://medium.com/@hoppy/how-to-test-or-scrape-javascript-rendered-websites-with-python-selenium-a-beginner-step-by-c137892216aa
