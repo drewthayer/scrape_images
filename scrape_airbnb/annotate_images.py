@@ -9,7 +9,7 @@ import numpy as np
 from skimage.io import imread
 import matplotlib.pyplot as plt
 
-from ImageAnnotation.annotators import ImageAnnotator_3options
+from ImageAnnotation.annotators import ImageAnnotator_4options as Annotator
 
 def load_name_mapper_json(map_names, filename):
     ''' if map_names = true, returns dictionary from json file,
@@ -32,33 +32,7 @@ def last_dir_from_path(path):
     else:
         return path.split('/')[-1]
 
-def main():
-    parser = argparse.ArgumentParser(description='Tool for labeling duplicate pairs that might be wrong.')
-    parser.add_argument('--image_dir', dest='image_dir', required=True)
-    parser.add_argument('--savepath', dest='savepath', default=None)
-    parser.add_argument('--img_type', dest='img_type', default='png')
-    parser.add_argument('--map_names', dest='map_names', action='store_true')
-    parser.add_argument('--show_annotated', dest='show_annotated', action='store_true')
-    parser.add_argument('--indiv_mode', dest='indiv_mode', action='store_true')
-    parser.add_argument('--index', dest='idx', default=0)
-    args = parser.parse_args()
-
-    # vars from cmd line args
-    filepaths = sorted(glob.glob(os.path.join(args.image_dir, '*.{}'.format(args.img_type))))[::-1]
-    savepath = args.savepath
-    map_names = args.map_names
-    skip_annotated = not args.show_annotated
-    indiv_mode = args.indiv_mode
-    idx = args.idx
-
-    # label from city name
-    label = filepaths[0].split('/')[-1].split('_')[0]
-
-    # impliment annotator class
-    annotator = ImageAnnotator_3options(filepaths, savepath, label, None,
-                        map_names, skip_annotated, indiv_mode, idx=0)
-    annotator.load_json_files()
-    annotator.label_pairs()
+#def main():
 
 
 if __name__ == "__main__":
@@ -82,10 +56,10 @@ if __name__ == "__main__":
     idx = args.idx
 
     # label from city name
-    label = filepaths[-1].split('/')[-1].split('_')[0]
+    label = filepaths[0].split('/')[-1].split('_')[0]
 
     # impliment annotator class
-    annotator = ImageAnnotator_3options(filepaths, savepath, label, None,
+    annotator = Annotator(filepaths, savepath, None, None,
                         map_names, skip_annotated, indiv_mode, idx=0)
     annotator.load_json_files()
     annotator.label_pairs()

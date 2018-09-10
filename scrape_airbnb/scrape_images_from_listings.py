@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import urllib3
 import os
 import json
+import sys
 
 
 def make_soup(url):
@@ -42,14 +43,16 @@ def save_images_sequential(links, fid, savepath):
 
 
 if __name__=='__main__':
+    # cmd line args
+    city = sys.argv[1]      # e.g. 'Denver'
+    state = sys.argv[2]     # e.g. 'CO'
+
     # set directories
     cwd = os.getcwd()
-    img_dir = cwd + '/images/'
+    img_dir = cwd + '/images/' + city + '/'
     listing_dir = cwd + '/listings/'
 
-    # load listings
-    city = 'Denver'
-    state = 'CO'
+    # load listings json file
     fname = 'airbnb_{}_{}.json'.format(city, state)
     with open(listing_dir + fname, 'r') as f:
         listings = json.load(f)
@@ -63,16 +66,3 @@ if __name__=='__main__':
         # save images with sequential names
         savename = '{}_{}_{}'.format(city, state, id)
         save_images_sequential(links, savename, img_dir)
-
-
-
-
-    # fid_num = 0
-    # for url in urls:
-    #     fid = 'listing_{}'.format(fid_num)
-    #     # extract image links
-    #     links = extract_image_urls(url)
-    #
-    #     # save images with sequential names
-    #     save_images_sequential(links, fid, savepath)
-    #     fid_num += 1
