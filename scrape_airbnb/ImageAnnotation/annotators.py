@@ -14,8 +14,9 @@ class ImageAnnotator_TP_TN(object):
     options: TP_hard, TP_normal, TN_OK, TN_not_OK, Unsure
 
     functionality:
-        maps file names to indices (and vice-versa)
+        maps file names to indices (and vice-versa) if --map_names is passed
         prints score, coded in filename (indices hard-coded in get_score_key_from_path)
+        can make auxiliary dict of 'unsure' images
 
     required packages: os, json, skimage.io, matplotlib.pyplot
 
@@ -227,15 +228,16 @@ class ImageAnnotator_TP_TN(object):
         self.load_next()
         plt.show()
 
+################################################################################
 
-
-class ImageAnnotator_3options(object):
+class ImageAnnotator_4options(object):
     '''
     class for annotating images
-    options: Bad, OK, Great, (unsure)
+    options: Great, Good, Poor, Other, (unsure)
 
     functionality:
         can map names if --map_names is passed
+        can make auxiliary dict of 'unsure' images
 
     required packages: os, json, skimage.io, matplotlib.pyplot
 
@@ -301,7 +303,7 @@ class ImageAnnotator_3options(object):
         ''' saves annotations dictionary to json file'''
         with open(self.savepath, 'w+') as f:
             json.dump(self.annots, f)
-        print('%d images reannotated' % len(self.annots))
+        print('%d images annotated' % len(self.annots))
 
 
     def add_border(self, img, color, width):
@@ -318,7 +320,7 @@ class ImageAnnotator_3options(object):
         plt.clf()
         plt.imshow(img)
         str1 = 'image: {}\n'.format(self.key)
-        str2 = '(a) Great, (k) OK, (l) Bad \n'
+        str2 = '(a) Great, (d) Good, (k) Poor, (l) Other \n'
         str3 = '(u) unsure, (q) quit'
         plt.title(str1 + str2 + str3)
         plt.xlabel('%d of %d' % (self.index, self.n_files))
@@ -419,17 +421,24 @@ class ImageAnnotator_3options(object):
                 self.index += 1
                 self.save_annotations()
                 self.load_next()
+            # good
+            elif event.key == 'd':
+                self.annots[self.fname] = 'Good'
+                self.last_index = self.index
+                self.index += 1
+                self.save_annotations()
+                self.load_next()
             # ok
             elif event.key == 'k':
                 self.last_index = self.index
-                self.annots[self.fname] = 'OK'
+                self.annots[self.fname] = 'Poor'
                 self.index += 1
                 self.save_annotations()
                 self.load_next()
             # bad
             elif event.key == 'l':
                 self.last_index = self.index
-                self.annots[self.fname] = 'Bad'
+                self.annots[self.fname] = 'Other'
                 self.index += 1
                 self.save_annotations()
                 self.load_next()

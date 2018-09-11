@@ -8,6 +8,7 @@ import json
 import numpy as np
 from skimage.io import imread
 import matplotlib.pyplot as plt
+import random
 
 from ImageAnnotation.annotators import ImageAnnotator_4options as Annotator
 
@@ -45,6 +46,7 @@ if __name__ == "__main__":
     parser.add_argument('--show_annotated', dest='show_annotated', action='store_true')
     parser.add_argument('--indiv_mode', dest='indiv_mode', action='store_true')
     parser.add_argument('--index', dest='idx', default=0)
+    parser.add_argument('--randomize', dest='randomize', action='store_true')
     args = parser.parse_args()
 
     # vars from cmd line args
@@ -54,6 +56,11 @@ if __name__ == "__main__":
     skip_annotated = not args.show_annotated
     indiv_mode = args.indiv_mode
     idx = args.idx
+
+    # randomize images if select from cmd line
+    # randomize with seed so order does not re-shuffle each time you run 
+    if args.randomize:
+        random.Random(4).shuffle(filepaths)
 
     # label from city name
     label = filepaths[0].split('/')[-1].split('_')[0]
@@ -71,5 +78,5 @@ if __name__ == "__main__":
     example to run:
     run annotate_images.py --image_dir data/exterior_p1_preds/by_score/downspout
        ...:  --savepath annotations/exterior-p1-downspout.json --img_type png
-       ...: --map_names (optional --indiv_mode 60)
+       ...: --map_names (optional --indiv_mode 60, optional --randomize)
     '''
