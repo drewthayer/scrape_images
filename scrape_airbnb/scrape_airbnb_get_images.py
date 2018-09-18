@@ -56,7 +56,7 @@ class AirbnbSpider():
     def process_listing(self, url, id):
         self.driver.get(url)
         # title
-        //*[@id="summary"]/div/div/div[1]/div[1]/div/span/span/h1
+        #//*[@id="summary"]/div/div/div[1]/div[1]/div/span/span/h1
         try:
             title = self.driver.find_element_by_xpath('//*[@id="summary"]//h1').text
             print(title)
@@ -139,12 +139,12 @@ if __name__=='__main__':
 
     # search params
     country = 'United-States'
-    min_price = 100
+    min_price = 50
     max_price = 200
 
     # output directories
     results_dir = 'Listings'
-    image_dir = 'Images_from_listings'
+    image_dir = 'Images_from_listings_2'
 
     # generate search urls
     search_urls = construct_search_urls(city, state, country, min_price, max_price)

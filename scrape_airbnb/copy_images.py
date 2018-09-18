@@ -24,32 +24,45 @@ def copy_files(file_list, extension, in_dir, out_dir, out_subdir):
     print('files copied')
 
 
+def sort_annotations_dict_to_lists(annots, categories):
+    ''' sorts keys in a dict into separate lists based on their values
+        input: annots (dict)
+        output: 3 lists of keys
+
+        set for 3 categories '''
+    cat_0 = []
+    cat_1 = []
+    cat_2 = []
+    for k in annots.keys():
+        if annots[k] == categories[0]:
+            cat_0.append(k)
+        elif annots[k] == categories[1]:
+            cat_1.append(k)
+        elif annots[k] == categories[2]:
+            cat_2.append(k)
+    return cat_0, cat_1, cat_2
+
+
 if __name__=='__main__':
+    ''' usage: $ python copy_images.py --img_dir Images --annot_file annotations.json
+    '''
     parser = argparse.ArgumentParser(description='Tool for copying images.')
-    parser.add_argument('--image_dir', dest='image_dir', required=True)
+    parser.add_argument('--img_dir', dest='img_dir', required=True)
     parser.add_argument('--annot_file', dest='annot_file', required=True)
     args = parser.parse_args()
 
     # directories
     output_dir = 'Images_Labeled/'
+    annot_dir = 'Annotations/'
 
     # load annotation file
-    #annot_file = 'annotations_{}.json'.format(city)
-    with open('Annotations/' + args.annot_file, 'r') as f:
+    with open(annot_dir + args.annot_file, 'r') as f:
         annots = json.load(f)
 
     # sort images
-    imgs_great = []
-    imgs_good = []
-    imgs_poor = []
-    for k in annots.keys():
-        if annots[k] == 'Great':
-            imgs_great.append(k)
-        elif annots[k] == 'Good':
-            imgs_good.append(k)
-        elif annots[k] == 'Poor':
-            imgs_poor.append(k)
+    labels = ['Great', 'Good', 'Poor']
+    imgs_0, imgs_1, imgs_2 = sort_annotations_dict_to_lists(annots, labels)
 
-    # move images
-    for img_list, subdir in zip([imgs_great, imgs_good, imgs_poor], ['Great/', 'Good/', 'Poor/']):
-        copy_files(img_list, '.png', args.image_dir, output_dir, subdir)
+    # copy images
+    for img_list, subdir in zip([imgs_0, imgs_1, imgs_2], ['Great/', 'Good/', 'Poor/']):
+        copy_files(img_list, '.png', args.img_dir, output_dir, subdir)

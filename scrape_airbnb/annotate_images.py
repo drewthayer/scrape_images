@@ -1,13 +1,12 @@
 import matplotlib
 matplotlib.use('TkAgg')
-
+import matplotlib.pyplot as plt # import after "matplotlib.use()"
 import os
 import glob
 import argparse
 import json
 import numpy as np
 from skimage.io import imread
-import matplotlib.pyplot as plt
 import random
 
 from ImageAnnotation.annotators import ImageAnnotator_4options as Annotator
@@ -39,7 +38,7 @@ def last_dir_from_path(path):
 if __name__ == "__main__":
     #main()
     parser = argparse.ArgumentParser(description='Tool for labeling duplicate pairs that might be wrong.')
-    parser.add_argument('--image_dir', dest='image_dir', required=True)
+    parser.add_argument('--img_dir', dest='img_dir', required=True)
     parser.add_argument('--savepath', dest='savepath', default=None)
     parser.add_argument('--img_type', dest='img_type', default='png')
     parser.add_argument('--map_names', dest='map_names', action='store_true')
@@ -50,7 +49,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # vars from cmd line args
-    filepaths = sorted(glob.glob(os.path.join(args.image_dir, '*.{}'.format(args.img_type))))[::-1]
+    filepaths = sorted(glob.glob(os.path.join(args.img_dir, '*.{}'.format(args.img_type))))[::-1]
     savepath = args.savepath
     map_names = args.map_names
     skip_annotated = not args.show_annotated
@@ -58,14 +57,14 @@ if __name__ == "__main__":
     idx = args.idx
 
     # randomize images if select from cmd line
-    # randomize with seed so order does not re-shuffle each time you run 
+    # randomize with seed so order does not re-shuffle each time you run
     if args.randomize:
         random.Random(4).shuffle(filepaths)
 
     # label from city name
     label = filepaths[0].split('/')[-1].split('_')[0]
 
-    # impliment annotator class
+    # implement annotator class
     annotator = Annotator(filepaths, savepath, None, None,
                         map_names, skip_annotated, indiv_mode, idx=0)
     annotator.load_json_files()
@@ -76,7 +75,7 @@ if __name__ == "__main__":
     this script runs outside the module, but comes with the module for convenience
 
     example to run:
-    run annotate_images.py --image_dir data/exterior_p1_preds/by_score/downspout
+    run annotate_images.py --img_dir data/exterior_p1_preds/by_score/downspout
        ...:  --savepath annotations/exterior-p1-downspout.json --img_type png
        ...: --map_names (optional --indiv_mode 60, optional --randomize)
     '''
