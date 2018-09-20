@@ -50,6 +50,7 @@ if __name__=='__main__':
     parser.add_argument('--img_dir', dest='img_dir', required=True)
     parser.add_argument('--annot_file', dest='annot_file', required=True)
     args = parser.parse_args()
+    print(parser.description)
 
     # directories
     output_dir = 'Images_Labeled/'

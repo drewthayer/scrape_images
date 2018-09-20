@@ -2,9 +2,9 @@ import os
 import json
 import numpy as np
 from skimage.io import imread
-import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt # import after "matplotlib.use()"
 
 import pdb
 
