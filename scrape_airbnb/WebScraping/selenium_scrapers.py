@@ -113,8 +113,7 @@ class AirbnbSpider():
         self.start_driver()
         self.get_page(self.url_to_crawl)
         self.get_listings_from_page()
-        #self.close_driver()
-        pdb.set_trace()
+        self.close_driver()
 
         if self.listings:
             return self.listings, self.count
