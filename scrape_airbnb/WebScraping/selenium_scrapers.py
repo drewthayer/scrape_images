@@ -1,7 +1,7 @@
 from selenium import webdriver
 from random import randint
 from time import sleep
-import sys
+import sys, pdb
 import urllib.request
 
 class AirbnbSpider():
@@ -36,10 +36,20 @@ class AirbnbSpider():
         print('getting listing urls...')
         try:
             # save listing url and metadata
-            listing_divs = self.driver.find_elements_by_xpath('//*[contains(@id, "listing")]/div[2]/a')
-            urls = [div.get_attribute('href') for div in listing_divs] # divs are WebElements
-        except Exception:
-            pass
+            # old xpath '//*[contains(@id, "listing")]/div[2]/a'
+            listing_divs = self.driver.find_elements_by_xpath('//*[contains(@id, "listing")]/div/div[2]/div/span/a')
+            urls = []
+            for div in listing_divs: # divs are WebElements
+                try:
+                    #url = div.find_element_by_css_selector('a').get_attribute('href')
+                    url = div.get_attribute('href')
+                    urls.append(url)
+                except Exception as E:
+                    print(E)
+                    continue
+        except Exception as E:
+            print(E)
+            sys.exit()
 
         # process urls
         for url in urls:
@@ -86,9 +96,11 @@ class AirbnbSpider():
     def select_image_links(self, links):
         out = []
         for link in links:
+            if 'https://' not in link:
+                continue
             domain = link.split('//')[1]
             filename = link.split('/')[-1]
-            if 'profile' not in filename and 'user' not in filename and 'googleapis' not in domain:
+            if 'profile' not in filename and 'user' not in filename and 'googleapis' not in domain and 'maps.gstatic' not in domain:
                 out.append(link)
         return out
 
@@ -101,7 +113,8 @@ class AirbnbSpider():
         self.start_driver()
         self.get_page(self.url_to_crawl)
         self.get_listings_from_page()
-        self.close_driver()
+        #self.close_driver()
+        pdb.set_trace()
 
         if self.listings:
             return self.listings, self.count

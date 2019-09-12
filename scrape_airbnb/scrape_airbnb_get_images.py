@@ -2,7 +2,7 @@ from selenium import webdriver
 from random import randint
 from time import sleep
 from JsonUtils.write_tools import write_or_update_to_json
-import sys
+import sys, os, pdb
 import urllib.request
 import argparse
 
@@ -154,7 +154,11 @@ if __name__=='__main__':
 
     # output directories
     results_dir = 'Listings'
-    image_dir = args.img_dir
+    image_dir = os.path.join(os.getcwd(), args.img_dir)
+    try:
+        os.makedirs(image_dir)
+    except Exception as E:
+        print(E)
 
     # generate search urls
     search_urls = construct_search_urls(city, state, country, min_price, max_price)
