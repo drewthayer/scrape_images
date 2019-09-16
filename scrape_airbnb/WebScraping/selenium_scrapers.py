@@ -6,9 +6,12 @@ import urllib.request
 
 class AirbnbSpider():
     ''' Selenium spider for crawling an Airbnb url '''
-    def __init__(self, url, image_dir):
+    def __init__(self, url, location, image_dir, metadata_file=None, limit=None):
         self.url_to_crawl = url
         self.image_dir = image_dir
+        self.location = location
+        self.meta_file = metadata_file
+        self.limit = limit
         #self.url_to_crawl = "https://www.airbnb.com/s/Denver--CO--United-States/homes"
         self.listings = {}
         self.count = 0
@@ -38,6 +41,8 @@ class AirbnbSpider():
             # save listing url and metadata
             # old xpath '//*[contains(@id, "listing")]/div[2]/a'
             listing_divs = self.driver.find_elements_by_xpath('//*[contains(@id, "listing")]/div/div[2]/div/span/a')
+            if self.limit:
+                listing_divs = listing_divs[:self.limit]
             urls = []
             for div in listing_divs: # divs are WebElements
                 try:
@@ -54,15 +59,15 @@ class AirbnbSpider():
         # process urls
         for url in urls:
             print(url)
-            id = url.split('/')[-1].split('?')[0]
-            # update json
+            listing_id = url.split('/')[-1].split('?')[0]
+            # update listings dictionary
             self.listings.update({'{}'.format(id):{'url':url}})
             # process listing
-            self.process_listing(url, id)
+            self.process_listing(url, listing_id)
             self.count += 1
 
 
-    def process_listing(self, url, id):
+    def process_listing(self, url, listing_id):
         self.driver.get(url)
         # title
         #//*[@id="summary"]/div/div/div[1]/div[1]/div/span/span/h1
@@ -70,12 +75,14 @@ class AirbnbSpider():
             title = self.driver.find_element_by_xpath('//*[@id="summary"]//h1').text
             print(title)
         except Exception:
+            title = ''
             print('no title found')
         # price
         try:
             price = self.driver.find_element_by_class_name('_doc79r').text
             print(price)
         except Exception:
+            price = ''
             print('no price found')
 
         # elements with images
@@ -90,7 +97,15 @@ class AirbnbSpider():
         # save images from links, sequentially named
         fid = 1
         for link in img_links:
-            self.save_image(link, id, fid)
+            img_id = listing_id + '_' + str(fid)
+            # save image
+            self.save_image(link, img_id)
+            # save metadata
+            if self.meta_file:
+                newline = f'{img_id},{self.location},{url},{price},{title}\n'
+                with open(self.meta_file, 'a') as f:
+                    f.write(newline)
+                    f.close()
             fid += 1
 
     def select_image_links(self, links):
@@ -104,9 +119,8 @@ class AirbnbSpider():
                 out.append(link)
         return out
 
-    def save_image(self, url, name, fid):
-        fname = name + '_' + str(fid)
-        urllib.request.urlretrieve(url, self.image_dir + '/' + fname + '.png')
+    def save_image(self, url, id):
+        urllib.request.urlretrieve(url, self.image_dir + '/' + str(id) + '.png')
         print('image saved')
 
     def parse(self):
