@@ -2,8 +2,12 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from random import randint
 from time import sleep
-import sys, pdb
+import sys, logging, pdb
 import urllib.request
+
+logging.basicConfig(format='%(asctime)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class AirbnbSpider():
     ''' Selenium spider for crawling an Airbnb url '''
@@ -13,14 +17,14 @@ class AirbnbSpider():
         self.location = location
         self.meta_file = metadata_file
         self.limit = limit
-        #self.url_to_crawl = "https://www.airbnb.com/s/Denver--CO--United-States/homes"
         self.listings = {}
-        self.count = 0
+        self.listing_count = 0
+        self.img_count = 0
 
 
     # Open headless chromedriver
     def start_driver(self):
-        print('starting driver...')
+        logger.debug('starting driver...')
         options = Options()
         options.headless = True
         self.driver = webdriver.Chrome(options=options)
@@ -29,25 +33,26 @@ class AirbnbSpider():
 
     # Close chromedriver
     def close_driver(self):
-        print('closing driver...')
+        logger.debug('closing driver...')
         self.driver.quit()
         print('driver closed')
 
 
     # Tell the browser to get a page
     def get_page(self, url):
-        print('getting page...')
+        logger.debug('getting page...')
         self.driver.get(url)
         sleep(randint(2,3))
 
 
     # Get listing URLs on a page
     def get_listings_from_page(self):
-        print('getting listing urls...')
+        logger.debug('getting listing urls...')
         try:
             # save listing url and metadata
             # old xpath '//*[contains(@id, "listing")]/div[2]/a'
             listing_divs = self.driver.find_elements_by_xpath('//*[contains(@id, "listing")]/div/div[2]/div/span/a')
+            logger.info(f'{len(listing_divs)} listings found, limit = {self.limit}')
             if self.limit:
                 listing_divs = listing_divs[:self.limit]
             urls = []
@@ -57,21 +62,21 @@ class AirbnbSpider():
                     url = div.get_attribute('href')
                     urls.append(url)
                 except Exception as E:
-                    print(E)
+                    logger.error(f'ERROR: {E}')
                     continue
         except Exception as E:
-            print(E)
+            logger.error(f'ERROR: {E}')
             sys.exit()
 
         # process urls
         for url in urls:
-            print(url)
+            logger.info(url)
             listing_id = url.split('/')[-1].split('?')[0]
             # update listings dictionary
             self.listings.update({'{}'.format(id):{'url':url}})
             # process listing
             self.process_listing(url, listing_id)
-            self.count += 1
+            self.listing_count += 1
 
 
     def process_listing(self, url, listing_id):
@@ -80,17 +85,17 @@ class AirbnbSpider():
         #//*[@id="summary"]/div/div/div[1]/div[1]/div/span/span/h1
         try:
             title = self.driver.find_element_by_xpath('//*[@id="summary"]//h1').text
-            print(title)
+            logger.debug(title)
         except Exception:
             title = ''
-            print('no title found')
+            logger.debug('no title found')
         # price
         try:
             price = self.driver.find_element_by_class_name('_doc79r').text
-            print(price)
+            logger.debug(price)
         except Exception:
             price = ''
-            print('no price found')
+            logger.debug('no price found')
 
         # elements with images
         img_elements = self.driver.find_elements_by_xpath('//*[@id="room"]//img')
@@ -100,20 +105,23 @@ class AirbnbSpider():
 
         # select only links with house images
         img_links = self.select_image_links(all_img_links)
-
-        # save images from links, sequentially named
-        fid = 1
-        for link in img_links:
-            img_id = listing_id + '_' + str(fid)
-            # save image
-            self.save_image(link, img_id)
-            # save metadata
-            if self.meta_file:
-                newline = f'{img_id},{self.location},{url},{price},{title}\n'
-                with open(self.meta_file, 'a') as f:
-                    f.write(newline)
-                    f.close()
-            fid += 1
+        if len(img_links) > 0:
+            # save images from links, sequentially named
+            fid = 1
+            for link in img_links:
+                img_id = listing_id + '_' + str(fid)
+                # save image
+                self.save_image(link, img_id)
+                self.img_count += 1
+                # save metadata
+                if self.meta_file:
+                    newline = f'{img_id},{self.location},{url},{price},{title}\n'
+                    with open(self.meta_file, 'a') as f:
+                        f.write(newline)
+                        f.close()
+                fid += 1
+        else:
+            logger.info('no images found')
 
 
     def select_image_links(self, links):
@@ -130,7 +138,6 @@ class AirbnbSpider():
 
     def save_image(self, url, id):
         urllib.request.urlretrieve(url, self.image_dir + '/' + str(id) + '.png')
-        print('image saved')
 
 
     def parse(self):
@@ -140,6 +147,7 @@ class AirbnbSpider():
         self.close_driver()
 
         if self.listings:
-            return self.listings, self.count
+            return self.listings, self.listing_count, self.img_count
         else:
+            logger.info('No listings found')
             return False

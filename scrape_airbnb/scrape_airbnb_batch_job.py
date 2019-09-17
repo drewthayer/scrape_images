@@ -5,14 +5,19 @@ from JsonUtils.write_tools import write_or_update_to_json
 import sys, os, pdb, json
 import urllib.request
 import argparse
+import logging
 
 from WebScraping.selenium_scrapers import AirbnbSpider
+
+logging.basicConfig(format='%(asctime)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def make_dir(dir_path):
     try:
         os.makedirs(dir_path)
     except FileExistsError as E:
-        print(f'exists: {dir_path}')
+        logger.debug(f'exists: {dir_path}')
 
 
 def construct_search_urls(city, state, country, min_price, max_price, price_delta=10):
@@ -48,19 +53,29 @@ if __name__=='__main__':
     #parser.add_argument('--max_price', dest='max_price', required=True)
     #parser.add_argument('--price_delta', dest='price_delta')
     args = parser.parse_args()
+    logger.info('Selenium AirBnb webscraper')
 
     # search params for batch job
     country = 'United-States'
-    city_state_list = [('Des-Moines','IA'),('Tacoma','WA'),('Houston','TX'),('Miami','FL'),
-        ('Portland','OR'),('Augusta','ME'),('Atlanta','GA'),('Lexington','KY'),
-        ('Tucson','AZ'),('Santa-Fe','NM'),('Arcata','CA'),('Manchester','NH'),
-        ('Raleigh','NC'),('Bellingham','WA'),('Cheyenne','WY','Fort-Collins','CO'),
-        ('Sacramento','CA'),('Burlington','VT'),('Cleveland','OH'),('Rochester','MN')]
+    # city_state_list = [('Des-Moines','IA'),('Tacoma','WA'),('Houston','TX'),('Miami','FL'),
+    #     ('Portland','OR'),('Augusta','ME'),('Atlanta','GA'),('Lexington','KY'),
+    #     ('Tucson','AZ'),('Santa-Fe','NM'),('Arcata','CA'),('Manchester','NH'),
+    #     ('Raleigh','NC'),('Bellingham','WA'),('Cheyenne','WY'),('Fort-Collins','CO'),
+    #     ('Sacramento','CA'),('Burlington','VT'),('Cleveland','OH'),('Rochester','MN')]
+
+    city_state_list = [
+        ('Cheyenne','WY'),('Fort-Collins','CO'),('Sacramento','CA'),('Burlington','VT'),
+        ('Cleveland','OH'),('Rochester','MN'),('Tampa','FL'),('San-Diego','CA'),
+        ('Portland','ME'),('Charleston','SC'),('Orlando','FL'),('Reno','NV'),
+        ('Seattle','WA'),('Columbus','OH'),('Boise','ID'),('Aspen','CO')
+        ]
 
     min_price = 50
-    max_price = 300
-    price_delta = 25
-    limit = 50
+    max_price = 60 #300
+    price_delta = 10 #25
+    limit = 3
+    logger.info(f'queries: {city_state_list}')
+    logger.info(f'query params: price {min_price} to {max_price} by {price_delta}, limit {limit}')
 
     # output locations
     # images, listing urls
@@ -68,6 +83,7 @@ if __name__=='__main__':
     img_dir = os.path.join(out_dir, 'images')
     listing_dir = os.path.join(out_dir, 'listing-urls')
     [make_dir(x) for x in [img_dir, listing_dir]]
+    logger.info(f'output directory: {out_dir}')
 
     # queries
     query_logfile = os.path.join(out_dir, 'scrape_queries.txt')
@@ -87,36 +103,45 @@ if __name__=='__main__':
     except Exception as E:
         print(E)
 
-
-
-    total = 0
+    # step through city-state list and scrape images
+    n_listings_tot = 0
+    n_images_tot = 0
     for item in city_state_list:
         city, state = item
         # generate search urls
         search_urls = construct_search_urls(city, state, country, min_price, max_price, price_delta)
 
         # crawl all urls
-        count_total = 0
+        n_listings = 0
+        n_images = 0
         for url in search_urls:
-            # Run spider
-            location = f'{city}_{state}'
-            spider = AirbnbSpider(url, location, img_dir, metadata_file, limit=limit)
-            output = spider.parse() # saves images to img_dir
-            if output:
-                # count listings
-                listings, count = output
-                print('{} listings found'.format(count))
+            try:
+                # Run spider
+                location = f'{city}_{state}'
+                logger.info(f'scraping {location}')
+                spider = AirbnbSpider(url, location, img_dir, metadata_file, limit=limit)
+                output = spider.parse() # saves images to img_dir
+                if output:
+                    # count listings
+                    listings, listing_count, img_count = output
 
-                # write seach query to txt
-                with open(query_logfile, 'a+') as f:
-                    f.write(f'{url}\n')
-                    f.close()
+                    # write seach query to txt
+                    with open(query_logfile, 'a+') as f:
+                        f.write(f'{url}\n')
+                        f.close()
 
-                # write listing ID + url to json
-                fname = f'{location}.json'
-                write_or_update_to_json(os.path.join(listing_dir, fname), listings)
-                count_total += count
-            else:
-                print(f'url empty: {url}')
-
-        print('\n TOTAL: {} listings found'.format(count_total))
+                    # write listing ID + url to json
+                    fname = f'{location}.json'
+                    write_or_update_to_json(os.path.join(listing_dir, fname), listings)
+                    n_listings += listing_count
+                    n_listings_tot += listing_count
+                    n_images += img_count
+                    n_images_tot += img_count
+                else:
+                    logger.info(f'url empty: {url}')
+            except Exception as E:
+                logger.error(f'ERROR: {E}')
+                continue
+        logger.info(f'{n_images} images downloaded from {location}')
+        logger.info(f'TOTAL: {n_listings_tot} listings found')
+        logger.info(f'TOTAL: {n_images_tot} images downloaded')
