@@ -1,4 +1,5 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from random import randint
 from time import sleep
 import sys, pdb
@@ -16,11 +17,15 @@ class AirbnbSpider():
         self.listings = {}
         self.count = 0
 
+
     # Open headless chromedriver
     def start_driver(self):
         print('starting driver...')
-        self.driver = webdriver.Chrome()
+        options = Options()
+        options.headless = True
+        self.driver = webdriver.Chrome(options=options)
         sleep(4)
+
 
     # Close chromedriver
     def close_driver(self):
@@ -28,11 +33,13 @@ class AirbnbSpider():
         self.driver.quit()
         print('driver closed')
 
+
     # Tell the browser to get a page
     def get_page(self, url):
         print('getting page...')
         self.driver.get(url)
         sleep(randint(2,3))
+
 
     # Get listing URLs on a page
     def get_listings_from_page(self):
@@ -108,6 +115,7 @@ class AirbnbSpider():
                     f.close()
             fid += 1
 
+
     def select_image_links(self, links):
         out = []
         for link in links:
@@ -119,9 +127,11 @@ class AirbnbSpider():
                 out.append(link)
         return out
 
+
     def save_image(self, url, id):
         urllib.request.urlretrieve(url, self.image_dir + '/' + str(id) + '.png')
         print('image saved')
+
 
     def parse(self):
         self.start_driver()
