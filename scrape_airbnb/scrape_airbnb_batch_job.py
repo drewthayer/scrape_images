@@ -71,9 +71,9 @@ if __name__=='__main__':
         ]
 
     min_price = 50
-    max_price = 60 #300
-    price_delta = 10 #25
-    limit = 3
+    max_price = 400
+    price_delta = 10
+    limit = 50
     logger.info(f'queries: {city_state_list}')
     logger.info(f'query params: price {min_price} to {max_price} by {price_delta}, limit {limit}')
 
@@ -117,7 +117,7 @@ if __name__=='__main__':
         for url in search_urls:
             try:
                 # Run spider
-                location = f'{city}_{state}'
+                location = f'{city}_{state}' # add price range here
                 logger.info(f'scraping {location}')
                 spider = AirbnbSpider(url, location, img_dir, metadata_file, limit=limit)
                 output = spider.parse() # saves images to img_dir
