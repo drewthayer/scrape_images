@@ -3,25 +3,31 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from random import randint
 from time import sleep
-import sys, logging, json, os, pdb
+import sys, logging, json, os, csv, pdb
 import urllib.request
 
-logging.basicConfig(format='%(asctime)s - %(message)s',
+logging.basicConfig(format='%(asctime)s - %(funcName)s - %(lineno)d - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class AirbnbSpider():
     ''' Selenium spider for crawling an Airbnb url '''
-    def __init__(self, url, location, image_dir, metadata_file=None, limit=None, photo_size='large'):
+    def __init__(self, url, location, image_dir, metadata_file=None, limit=None, pricerange=None, photo_size='large'):
         self.url_to_crawl = url
         self.image_dir = image_dir
         self.location = location
         self.meta_file = metadata_file
         self.limit = limit
-        self.photo_size = photo_size
+        self.pricerange = pricerange # string
+        self.photo_size = photo_size # currently not necessary, have to scrape at .jpg endpoint
         self.listings = {}
         self.listing_count = 0
         self.img_count = 0
+
+        #if self.meta_file: This was re-writing it every time
+            #self.csv_writer = csv.writer(open(self.meta_file, 'w+'), delimiter=',')
+        #else:
+        #       self.csv_writer = None
 
 
     # Open headless chromedriver
@@ -72,7 +78,7 @@ class AirbnbSpider():
 
         # process urls
         for url in urls:
-            logger.info(url)
+            logger.debug(url)
             listing_id = url.split('/')[-1].split('?')[0]
             # update listings dictionary
             self.listings.update({'{}'.format(id):{'url':url}})
@@ -95,20 +101,43 @@ class AirbnbSpider():
     def download_photo(self,url,fname):
         urllib.request.urlretrieve(url, fname)
 
+    def get_price(self):
+        price = None
+        try:
+            price = self.driver.find_element_by_class_name('_doc79r').text
+            logger.debug(price)
+        except Exception:
+            logger.debug('no price found')
+
+        return price
+
     def process_listing(self, url, listing_id):
         self.driver.get(url)
         soup = self.get_soup_from_url()
         text = self.find_scripts(soup,idx=3)
         data = json.loads(text)
+        price = self.get_price()
         listing_data = data['bootstrapData']['reduxData']['homePDP']['listingInfo']['listing']
         photos = listing_data['webPListingPhotos']
         fid = 1
         for photo in photos:
             img_id = f'{listing_data["id"]}_' + str(fid).zfill(2)
             filename = os.path.join(self.image_dir, img_id + '.png')
-            img_url = photo[self.photo_size]
+            img_url = photo[self.photo_size].split('.jpg')[0]+'.jpg'
             self.download_photo(img_url,filename)
             fid += 1
+
+            # save metadata
+            if self.meta_file: # can't find price or title for now
+                caption = photo["caption"].replace(',',';')
+                price = price if price else ''
+                newline = f'{img_id},{caption},{price},{self.pricerange},{self.location},{img_url}\n' # sometimes caption has commas...
+                #newline = [img_id, photo["caption"], self.location, img_url]
+                #self.csv_writer.writerow(newline)
+                #pdb.set_trace()
+                with open(self.meta_file, 'a') as f:
+                    f.write(newline)
+                    f.close()
 
 
         # title

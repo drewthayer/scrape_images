@@ -2,7 +2,7 @@ from selenium import webdriver
 from random import randint
 from time import sleep
 from JsonUtils.write_tools import write_or_update_to_json
-import sys, os, pdb, json
+import sys, os, pdb, re, json
 import urllib.request
 import argparse
 import logging
@@ -64,6 +64,11 @@ if __name__=='__main__':
     #     ('Sacramento','CA'),('Burlington','VT'),('Cleveland','OH'),('Rochester','MN')]
 
     city_state_list = [
+        ('Des-Moines','IA'),('Tacoma','WA'),('Houston','TX'),('Miami','FL'),
+        ('Portland','OR'),('Augusta','ME'),('Atlanta','GA'),('Lexington','KY'),
+        ('Tucson','AZ'),('Santa-Fe','NM'),('Arcata','CA'),('Manchester','NH'),
+        ('Raleigh','NC'),('Bellingham','WA'),('Cheyenne','WY'),('Fort-Collins','CO'),
+        ('Sacramento','CA'),('Burlington','VT'),('Cleveland','OH'),('Rochester','MN'),
         ('Cheyenne','WY'),('Fort-Collins','CO'),('Sacramento','CA'),('Burlington','VT'),
         ('Cleveland','OH'),('Rochester','MN'),('Tampa','FL'),('San-Diego','CA'),
         ('Portland','ME'),('Charleston','SC'),('Orlando','FL'),('Reno','NV'),
@@ -98,7 +103,7 @@ if __name__=='__main__':
     metadata_file = os.path.join(out_dir, 'img_metadata.csv')
     try:
         with open(metadata_file, 'w') as f:
-            f.write('img_id,location,url,price,title\n')
+            f.write('img_id,caption,price,price_range,location,url\n')
             f.close()
     except Exception as E:
         print(E)
@@ -118,8 +123,11 @@ if __name__=='__main__':
             try:
                 # Run spider
                 location = f'{city}_{state}' # add price range here
-                logger.info(f'scraping {location}')
-                spider = AirbnbSpider(url, location, img_dir, metadata_file, limit=limit)
+                sub = url.split('price_max=')[1]
+                prices = re.findall(r"\d+", sub)
+                logger.info(f'scraping {location} from ${prices[1]} to ${prices[0]}')
+                pricerange = f'{prices[1]}_{prices[0]}'
+                spider = AirbnbSpider(url, location, img_dir, metadata_file, limit=limit, pricerange=pricerange)
                 output = spider.parse() # saves images to img_dir
                 if output:
                     # count listings
@@ -140,8 +148,8 @@ if __name__=='__main__':
                 else:
                     logger.info(f'url empty: {url}')
             except Exception as E:
-                logger.error(f'ERROR: {E}')
-                continue
+               logger.error(f'ERROR: {E}')
+               continue
         logger.info(f'{n_images} images downloaded from {location}')
         logger.info(f'TOTAL: {n_listings_tot} listings found')
         logger.info(f'TOTAL: {n_images_tot} images downloaded')
